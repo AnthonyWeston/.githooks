@@ -1,0 +1,36 @@
+#!/bin/sh
+
+function check_diffs () {
+  FOLDER_PATTERN="$1"
+  FILES_PATTERN="$2"
+  FORBIDDEN_REGEX="$3"
+  FORBIDDEN_PRINTABLE="${4:-$3}"
+  FORBIDDEN_FILE_NAMES="$5"
+  CHANGED_FILES=$(git diff --cached --name-only | egrep $FOLDER_PATTERN | egrep $FILES_PATTERN)
+
+  CONTENT_OK=1
+  REJECTED_FILES=
+  for FILE in $CHANGED_FILES ; do
+    git diff --cached --no-color -U0 $FILE | egrep '^\+[^\+]' | egrep -q "$FORBIDDEN_REGEX"
+    if [[ "$?" -eq 0 ]]; then
+      CONTENT_OK=0
+      echo "$FILE"
+    fi
+
+    if [[ -z $REJECTED_FILES && $FORBIDDEN_FILE_NAMES == *"$FILE"* ]]; then
+      REJECTED_FILES="$FILE $REJECTED_FILES"
+    fi
+  done
+  if [[ "$CONTENT_OK" -eq 0 ]]; then
+    echo "COMMIT REJECTED: found '$FORBIDDEN_PRINTABLE' references. Please remove them before committing."
+    exit 1
+  fi
+  if [[ ! -z $REJECTED_FILES ]]; then
+    echo "COMMIT REJECTED: files '$REJECTED_FILES' are modified. Please remove them before committing."
+    exit 1
+  fi
+}
+
+check_diffs '^' '.+' 'NOCOMMIT' 'NOCOMMIT' 'pom.xml'
+
+exit 0

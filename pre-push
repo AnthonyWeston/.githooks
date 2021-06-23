@@ -1,0 +1,14 @@
+#!/bin/bash
+
+PROTECTED_FILE_PATTERN='^(support\/\d+\.\d+?|master)$'
+
+if ( git rev-parse --abbrev-ref HEAD | grep -q -oP $PROTECTED_FILE_PATTERN ); then
+  echo "Cannot push to protected branch $(git rev-parse --abbrev-ref HEAD)"
+  echo Retry with --no-verify to bypass this check:
+
+  echo '
+      '"git push --no-verify ${@:2}"'
+  '
+
+  exit 1
+fi
