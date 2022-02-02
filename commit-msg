@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# If an issue number is present in the commit message and the branch, verifies that they match
+# If an issue number is present in the commit message but not the branch, returns 0
+# If the issue number is present in the branch but not the commit message, prepends the issue number to the ticket and returns 0
+# If the issue number is not in the branch or the commit message, returns 1
+
+issue_regex='\w+-\d+'
+
+commit_msg_file="$1"
+commit_msg=$(cat $1)
+commit_issue=$(echo "$commit_msg" | grep -oP "^$issue_regex: .+")
+branch_issue=$(git branch --show-current | grep -ioP '[a-z0-9-_]+$' | grep -oP "^$issue_regex")
+
+
+if [[ -n "$commit_issue" && -n "$branch_issue" ]]; then
+	if [ "$commit_issue" == "$branch_issue" ]; then
+		exit 0
+	else
+		echo "Issue '$commit_issue' in commit message doesn't match issue '$branch_issue' in the branch name."
+		exit 1
+	fi
+elif [ -n "$commit_issue" ]; then
+	exit 0
+elif [ -n "$branch_issue" ]; then
+	echo $branch_issue": $commit_msg" > $commit_msg_file
+	exit 0
+else
+	echo 'Missing ticket number in commit message and branch name.'
+	exit 1
+fi
