@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-function check_diffs () {
+function check_diffs() {
   FOLDER_PATTERN="$1"
   FILES_PATTERN="$2"
   FORBIDDEN_REGEX="$3"
@@ -31,6 +31,21 @@ function check_diffs () {
   fi
 }
 
-check_diffs '^' '.+' 'NOCOMMIT' 'NOCOMMIT' 'pom.xml'
 
-exit 0
+function checkstyle_test_sources() {
+  base_file_names=$(git diff --cached --name-only | grep Test.java | xargs -I '{}'  basename "{}" .java)
+  regex=$(echo $base_file_names | sed 's/ /|/g')
+  mvn compile -Dcheckstyle.skip=false -Dcheckstyle.includeTestSourceDirectory=true | grep -P $regex
+
+  echo "COMMIT REJECTED: Fix checkstyle errors in test source files."
+  exit 1
+}
+
+
+if [[ -e .git/MERGE_HEAD ]]; then exit 0; 
+else
+  check_diffs '^' '.+' 'NOCOMMIT' 'NOCOMMIT' 'pom.xml'
+  checkstyle_test_sources
+fi
+
+exit $?
