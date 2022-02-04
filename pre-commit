@@ -6,7 +6,9 @@ function check_diffs() {
   FORBIDDEN_REGEX="$3"
   FORBIDDEN_PRINTABLE="${4:-$3}"
   FORBIDDEN_FILE_NAMES="$5"
-  CHANGED_FILES=$(git diff --cached --name-only | egrep $FOLDER_PATTERN | egrep $FILES_PATTERN)
+  UNSTAGED_ONLY="${6:+--cached}"
+
+  CHANGED_FILES=$(git diff $UNSTAGED_ONLY --name-only | egrep $FOLDER_PATTERN | egrep $FILES_PATTERN)
 
   CONTENT_OK=1
   REJECTED_FILES=
@@ -31,6 +33,7 @@ function check_diffs() {
   fi
 }
 
+<<<<<<< Updated upstream
 
 function checkstyle_test_sources() {
   base_file_names=$(git diff --cached --name-only | grep Test.java | xargs -I '{}'  basename "{}" .java)
@@ -49,3 +52,6 @@ else
 fi
 
 exit $?
+=======
+exit $?
+>>>>>>> Stashed changes

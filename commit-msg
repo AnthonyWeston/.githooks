@@ -9,7 +9,7 @@ issue_regex='\w+-\d+'
 
 commit_msg_file="$1"
 commit_msg=$(cat $1)
-commit_issue=$(echo "$commit_msg" | grep -oP "^$issue_regex: .+")
+commit_issue=$(echo "$commit_msg" | grep -oP "^$issue_regex(?=: .+)")
 branch_issue=$(git branch --show-current | grep -ioP '[a-z0-9-_]+$' | grep -oP "^$issue_regex")
 
 
